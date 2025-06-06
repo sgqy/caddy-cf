@@ -8,9 +8,7 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      contents: read
+    permissions: write-all
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
