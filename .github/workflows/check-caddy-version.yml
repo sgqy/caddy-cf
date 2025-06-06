@@ -1,0 +1,33 @@
+name: check-caddy-version
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Fetch latest Caddy release
+        id: latest
+        run: |
+          version=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Read stored version
+        id: stored
+        run: |
+          echo "version=${{ vars.CADDY_VERSION }}" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger build for new version
+        if: steps.latest.outputs.version != steps.stored.outputs.version
+        env:
+          NEW_VERSION: ${{ steps.latest.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh variable set CADDY_VERSION -b "$NEW_VERSION"
+          gh workflow run docker-publish.yml
