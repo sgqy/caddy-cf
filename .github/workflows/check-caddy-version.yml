@@ -8,10 +8,19 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      actions: write
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Fetch latest Caddy release
         id: latest
@@ -28,7 +37,7 @@ jobs:
         if: steps.latest.outputs.version != steps.stored.outputs.version
         env:
           NEW_VERSION: ${{ steps.latest.outputs.version }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           gh variable set CADDY_VERSION -b "$NEW_VERSION"
           gh workflow run docker-publish.yml
