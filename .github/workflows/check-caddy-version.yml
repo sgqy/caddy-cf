@@ -11,6 +11,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+    environment: check upstream
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
